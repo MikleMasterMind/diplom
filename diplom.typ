@@ -77,3 +77,9 @@
 #pagebreak()
 
 = Литература
+
+- BBR: Congestion-Based Congestion Control / Neal Cardwellyuchung, Chengc Stephen, Gunnsoheil Hassas, Yeganehvan Jacobson - Queue, 2016 - 34 с. <BBR>
+- On the Impact of Packet Spraying in Data Center Networks / Advait Dixit, Pawan Prakash, Y. Charlie Hu, and Ramana Rao Kompella - INFOCOM, 2013 - 9 с. <Impact-of-Packet-Spraying>
+- Improving the Robustness of TCP to Non-Congestion Events / S. Bhandarkar, A. L. N. Reddy, M. Allman, E. Blanton - Computer Communications, 2006 - 18 c. <TCP-NCR>
+- Making congestion control robust to per-packet load balancing in datacenters - Barak Gerstein, Mark Silberstein, Isaac Keslassy - arXiv, 2025 - 10 c. <MTCP>
+- Improving datacenter throughput and robustness with Lazy TCP over packet spraying / Jie Zhanga, Dafang Zhanga, Kun Huang - Computer Communications, 2015 - 11 c. <LTCP>
