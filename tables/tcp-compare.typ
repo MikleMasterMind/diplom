@@ -25,6 +25,7 @@
       else if y == 2 { if x == 1 { red } else { green } }
       else if y == 3 { if x == 1 { green } else if x == 2 { red } else { orange } }
       else if y == 4 { red }
+      else if y == 5 { red }
       else { none }
     },
 
@@ -48,6 +49,12 @@
 
     // Row 4
     [Отсутствие избыточных потерь при реальной перегрузке],
+    [Нет],
+    [Нет],
+    [Нет],
+
+    // Row 5
+    [Применимость к BBR],
     [Нет],
     [Нет],
     [Нет],
