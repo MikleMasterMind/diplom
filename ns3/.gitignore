@@ -1,0 +1,5 @@
+build
+cmake-cache
+.lock-ns3_darwin_build
+result/data/*
+result/graph/*
