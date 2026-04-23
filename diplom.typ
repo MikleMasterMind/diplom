@@ -14,8 +14,49 @@
 
 #set heading(numbering: "1.1.")
 
-#set figure(supplement: "Рисунок")
-#set figure(numbering: "1")
+#let figure-counter = counter("figure")
+#let table-counter = counter("table")
+
+#figure-counter.update(0)
+#table-counter.update(0)
+
+#let figure-caption(body) = {
+  figure-counter.step()
+  context align(center, {
+    text(weight: "regular", [
+      Рисунок #figure-counter.display(). #body
+    ])
+  })
+}
+
+#let table-caption(body) = {
+  table-counter.step()
+  context align(center, {
+    text(weight: "regular", [
+      Таблица #table-counter.display(). #body
+    ])
+  })
+}
+
+#let figure(
+  image,
+  caption,
+) = {
+  block(spacing: 0.5cm, {
+    align(center, image)
+    figure-caption(caption)
+  })
+}
+
+#let custom-table(
+  content,
+  caption,
+) = {
+  block(spacing: 0.5cm, {
+    align(center, content)
+    table-caption(caption)
+  })
+}
 
 #align(center)[
   #text()[
@@ -156,9 +197,7 @@ $ "inflight" approx "BDP" $
 
 #figure(
   image("images/bbr-schema.png"),
-  caption: [
-    Схема автомата BBR.
-  ],
+  [Схема автомата BBR.],
 )
 
 Функционирование BBR удобно описывать как работу конечного автомата из четырёх основных состояний @BBR.
@@ -208,11 +247,10 @@ $ N = max(min(α dot "cwnd", K), 3) $,
 
 == Выводы по обзору и выбор направления для модификации BBR
 
-#figure(
-  caption: [Сравнение подходов TCP-NCR, LTCP и MSwift],
-)[
-  #tcp-compare-table
-] <tab:tcp-compare>
+#custom-table(
+  tcp-compare-table,
+  [Сравнение подходов TCP-NCR, LTCP и MSwift],
+)
 
 Рассмотренные подходы решают разные частные проблемы packet spraying, однако ни один из них не может быть непосредственно использован как модификация BBR. TCP-NCR и LTCP ориентированы на классический TCP, в котором ключевыми управляющими событиями являются duplicate ACK, fast retransmit и изменение `cwnd` после потерь. Для BBR такие механизмы вторичны: его поведение определяется моделью пути, оценками `BtlBw` и `RTprop`, а также управлением через pacing. Поэтому улучшение обработки duplicate ACK само по себе не устраняет главную причину деградации BBR при пакетной балансировке — искажение измерений, из которых строится модель.
 
