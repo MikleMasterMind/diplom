@@ -66,7 +66,7 @@ GoodputSampler()
         g_goodputLastTime = now;
     }
 
-    Simulator::Schedule(MilliSeconds(100), &GoodputSampler);
+    Simulator::Schedule(MilliSeconds(50), &GoodputSampler);
 }
 
 // =======================
@@ -254,7 +254,7 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     numBadPaths = std::min(numBadPaths, numPaths);
-    const std::string queueSize = "1000000B";
+    const std::string queueSize = QUEUE_SIZE;
 
     Config::SetDefault("ns3::DropTailQueue<Packet>::MaxSize", StringValue(queueSize));
 
@@ -279,6 +279,7 @@ main(int argc, char* argv[])
     if (numBadPaths > 0) {
         resultPathParts.push_back(badDataRate + "-badDataRate" + badDelay + "-badDelay");
     }
+    resultPathParts.push_back(queueSize + "-queueSize");
     resultPathParts.push_back(sackEnabled ? "sackEnabled" : "sackDisabled");
 
     std::ostringstream dirBuilder;
