@@ -15,7 +15,7 @@ EXPERIMENT_NAME = "my-experiment"
 SIMULATION_TIME = 60
 
 # Each configuration uses the format:
-# (good_data_rate, good_delay, bad_data_rate, bad_delay)
+# (good_data_rate, good_delay, bad_data_rate, bad_delay, realCongestion)
 NETWORK_CONFIGS = [
     # {
         # ("5Mbps", "1ms"): [
@@ -35,11 +35,22 @@ NETWORK_CONFIGS = [
     #         ("50Mbps", "10ms"),
     #     ]
     # },
+    # {
+    #     ("5Mbps", "10ms"): [
+    #         ("5Mbps", "20ms"),
+    #         ("5Mbps", "50ms"),
+    #         ("5Mbps", "100ms"),
+    #         ("2Mbps", "10ms"),
+    #         ("1Mbps", "10ms"),
+    #     ]
+    # },
     {
         ("50Mbps", "10ms"): [
-    #         ("50Mbps", "50ms"),
-            ("25Mbps", "100ms"),
-            # ("50Mbps", "100ms"),
+            ("50Mbps", "10ms", "true")
+            # ("5Mbps", "10ms", "", ""),
+            # ("5Mbps", "10ms", "", ""),
+            # ("5Mbps", "10ms", "", ""),
+            # ("5Mbps", "10ms", "", ""),
         ]
     },
 ]
@@ -47,13 +58,11 @@ NETWORK_CONFIGS = [
 # Each configuration uses the format:
 # (num_paths, num_bad_paths)
 PATH_CONFIGS = [
+    # ("1", "0"),
     ("2", "0"),
     ("2", "1"),
-    ("2", "2"),
     # ("3", "0"),
     # ("3", "1"),
-    # ("4", "0"),
-    # ("4", "1"),
 ]
 
 SACK_CONFIGS = [
@@ -71,6 +80,7 @@ def run_experiment(
     good_delay: str,
     bad_data_rate: str,
     bad_delay: str,
+    realCongestion: str,
     num_paths: str,
     num_bad_paths: str,
     sim_time: int,
@@ -82,27 +92,38 @@ def run_experiment(
     print(f"  Good Delay: {good_delay}")
     print(f"  Bad Data Rate: {bad_data_rate}")
     print(f"  Bad Delay: {bad_delay}")
+    print(f"  Real Congestion enabled: {realCongestion}")
     print(f"  Number of Paths: {num_paths}")
     print(f"  Number of Bad Paths: {num_bad_paths}")
     print(f"  Simulation Time: {sim_time} seconds")
     print(f"  SACK Enabled: {format_bool(sack_enabled)}")
     print("========================================")
 
+    # Build command arguments
+    args = [
+        f"--goodDataRate={good_data_rate}",
+        f"--goodDelay={good_delay}",
+        f"--badDataRate={bad_data_rate} "
+        f"--badDelay={bad_delay} "
+        f"--numPaths={num_paths}",
+        f"--numBadPaths={num_bad_paths}",
+        f"--simulationTime={sim_time}",
+        f"--sackEnabled={format_bool(sack_enabled)}",
+    ]
+    
+    if realCongestion:
+        args.append("--realCongestion=true")
+    else:
+        args.append("--realCongestion=false")
+    
     command = [
         "./ns3",
         "run",
-        (
-            f"{EXPERIMENT_NAME} "
-            f"--goodDataRate={good_data_rate} "
-            f"--goodDelay={good_delay} "
-            f"--badDataRate={bad_data_rate} "
-            f"--badDelay={bad_delay} "
-            f"--numPaths={num_paths} "
-            f"--numBadPaths={num_bad_paths} "
-            f"--simulationTime={sim_time} "
-            f"--sackEnabled={format_bool(sack_enabled)}"
-        ),
+        f"{EXPERIMENT_NAME} " + " ".join(args),
     ]
+
+    print(f"Running command: {' '.join(command)}")
+    print()
 
     result = subprocess.run(command, check=False)
     if result.returncode == 0:
@@ -115,26 +136,37 @@ def run_experiment(
     return False
 
 
-def iter_experiments() -> Iterable[tuple[str, str, str, str, str, str, bool]]:
+def iter_experiments() -> Iterable[tuple[str, str, str, str, str, str, str, bool]]:
     for network_config in NETWORK_CONFIGS:
         for (good_data_rate, good_delay), bad_configs in network_config.items():
             for num_paths, num_bad_paths in PATH_CONFIGS:
                 if num_bad_paths == "0":
-                    selected_bad_configs = [bad_configs[0]]
+                    for bad_data_rate, bad_delay, realCongestion  in [bad_configs[0]]:
+                        for sack_enabled in SACK_CONFIGS:
+                            yield (
+                                good_data_rate,
+                                good_delay,
+                                bad_data_rate,
+                                bad_delay,
+                                realCongestion,
+                                num_paths,
+                                num_bad_paths,
+                                sack_enabled,
+                            )
                 else:
-                    selected_bad_configs = bad_configs
-
-                for bad_data_rate, bad_delay in selected_bad_configs:
-                    for sack_enabled in SACK_CONFIGS:
-                        yield (
-                            good_data_rate,
-                            good_delay,
-                            bad_data_rate,
-                            bad_delay,
-                            num_paths,
-                            num_bad_paths,
-                            sack_enabled,
-                        )
+                    # Run all configurations for bad paths
+                    for bad_data_rate, bad_delay, realCongestion in bad_configs:
+                        for sack_enabled in SACK_CONFIGS:
+                            yield (
+                                good_data_rate,
+                                good_delay,
+                                bad_data_rate,
+                                bad_delay,
+                                realCongestion,
+                                num_paths,
+                                num_bad_paths,
+                                sack_enabled,
+                            )
 
 
 def main() -> int:
@@ -163,6 +195,7 @@ def main() -> int:
         good_delay,
         bad_data_rate,
         bad_delay,
+        realCongestion,
         num_paths,
         num_bad_paths,
         sack_enabled,
@@ -172,6 +205,7 @@ def main() -> int:
             good_delay,
             bad_data_rate,
             bad_delay,
+            realCongestion,
             num_paths,
             num_bad_paths,
             SIMULATION_TIME,

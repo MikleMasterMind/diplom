@@ -283,7 +283,7 @@ def render_plot(plot_data: PlotData, metric_y_min_positive: float, metric_y_max:
     fig, axis = plt.subplots(figsize=(12, 8))
 
     plot_data_on_axis(axis, plot_data, show_xlabel=True)
-    axis.set_title(build_plot_title(plot_data))
+    # axis.set_title(build_plot_title(plot_data))
     axis.set_ylim(bottom=0, top=metric_y_max * 1.05 if metric_y_max > 0 else 1.0)
     configure_axis_ticks(axis, plot_data.simulation_time)
     axis.grid(True, which="major", linewidth=0.8)

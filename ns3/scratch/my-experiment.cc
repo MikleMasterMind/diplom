@@ -36,8 +36,7 @@ RttTracer(std::string context, Time oldval, Time newval)
         *g_rttStream->GetStream() << "#Time(s) Rtt(s)\n";
         g_firstRtt = false;
     }
-    *g_rttStream->GetStream() << Simulator::Now().GetSeconds() << " " << newval.GetSeconds() << " "
-                              << context << "\n";
+    *g_rttStream->GetStream() << Simulator::Now().GetSeconds() << " " << newval.GetSeconds() << "\n";
 }
 
 // =======================
@@ -167,7 +166,7 @@ RtpropRawTracer(std::string context, Time oldval, Time newval)
         g_firstRtpropRaw = false;
     }
     *g_rtpropRawStream->GetStream() << Simulator::Now().GetSeconds() << " "
-                                    << newval.GetSeconds() << " " << context << "\n";
+                                    << newval.GetSeconds()  << "\n";
 }
 
 static void
@@ -178,8 +177,7 @@ BtlBwRawTracer(std::string context, uint64_t oldval, uint64_t newval)
         *g_btlBwRawStream->GetStream() << "#Time(s) BtlBwRaw(Mbps) Context\n";
         g_firstBtlBwRaw = false;
     }
-    *g_btlBwRawStream->GetStream() << Simulator::Now().GetSeconds() << " " << (newval / 1e6)
-                                   << " " << context << "\n";
+    *g_btlBwRawStream->GetStream() << Simulator::Now().GetSeconds() << " " << (newval / 1e6) << "\n";
 }
 
 // =======================
@@ -242,6 +240,8 @@ main(int argc, char* argv[])
 
     bool sackEnabled = TCP_SOCKET_BASE_SACK_ENABLED;
 
+    bool realCongestion = false;
+
     CommandLine cmd;
     cmd.AddValue("simulationTime", "Simulation time in seconds", simulationTime);
     cmd.AddValue("numPaths", "Number of parallel paths", numPaths);
@@ -251,6 +251,7 @@ main(int argc, char* argv[])
     cmd.AddValue("badDataRate", "Data rate for bad paths", badDataRate);
     cmd.AddValue("badDelay", "Delay for bad paths", badDelay);
     cmd.AddValue("sackEnabled", "Enable or disable TCP SACK", sackEnabled);
+    cmd.AddValue("realCongestion", "Enable real congestion traffic on bad paths", realCongestion);
     cmd.Parse(argc, argv);
 
     numBadPaths = std::min(numBadPaths, numPaths);
@@ -276,8 +277,15 @@ main(int argc, char* argv[])
     resultPathParts.push_back(std::to_string(numPaths) + "-numPaths");
     resultPathParts.push_back(std::to_string(numBadPaths) + "-numBadPaths");
     resultPathParts.push_back(goodDataRate + "-goodDataRate" + goodDelay + "-goodDelay");
-    if (numBadPaths > 0) {
-        resultPathParts.push_back(badDataRate + "-badDataRate" + badDelay + "-badDelay");
+    if (realCongestion)
+    {
+        resultPathParts.push_back("realCongestion");
+    }
+    else
+    {
+        if (numBadPaths > 0) {
+            resultPathParts.push_back(badDataRate + "-badDataRate" + badDelay + "-badDelay");
+        }
     }
     resultPathParts.push_back(queueSize + "-queueSize");
     resultPathParts.push_back(sackEnabled ? "sackEnabled" : "sackDisabled");
@@ -512,6 +520,45 @@ main(int argc, char* argv[])
     ApplicationContainer clientApp = bulkSend.Install(clientNode.Get(0));
     clientApp.Start(Seconds(1.0));
     clientApp.Stop(simulationTime - Seconds(1.0));
+
+    // ==========================
+    // ADDITIONAL CONGESTION TRAFFIC (if realCongestion is enabled)
+    // ==========================
+    std::vector<ApplicationContainer> congestionApps;
+    if (realCongestion && numBadPaths > 0)
+    {
+        NS_LOG_INFO("Enabling real congestion traffic on " << numBadPaths << " bad path(s)");
+        
+        // Create additional server address on a different port for congestion traffic
+        uint16_t congestionPort = 5001;
+        Address congestionServerAddress(InetSocketAddress(serviceIp, congestionPort));
+        
+        // Install sink for congestion traffic on server
+        PacketSinkHelper congestionSinkHelper("ns3::TcpSocketFactory", congestionServerAddress);
+        ApplicationContainer congestionServerApp = congestionSinkHelper.Install(serverNode.Get(0));
+        congestionServerApp.Start(Seconds(0.0));
+        congestionServerApp.Stop(simulationTime);
+        
+        // Create multiple congestion flows - TCP will automatically adjust its sending rate
+        // based on network conditions (congestion control, slow start, etc.)
+        uint32_t numCongestionFlows = numBadPaths;
+        
+        for (uint32_t i = 0; i < numCongestionFlows; i++)
+        {
+            BulkSendHelper congestionSend("ns3::TcpSocketFactory", congestionServerAddress);
+            congestionSend.SetAttribute("MaxBytes", UintegerValue(0));
+            congestionSend.SetAttribute("SendSize", UintegerValue(1460));
+            
+            ApplicationContainer congestionClientApp = congestionSend.Install(clientNode.Get(0));
+            // Stagger start times to avoid synchronization
+            congestionClientApp.Start(Seconds(1.0 + i * 0.1));
+            congestionClientApp.Stop(simulationTime - Seconds(1.0));
+            congestionApps.push_back(congestionClientApp);
+            
+            NS_LOG_INFO("Created congestion flow " << i + 1 << " on bad path index " 
+                        << (numPaths - numBadPaths + i));
+        }
+    }
 
     // Grab sink pointer for goodput
     g_sink = DynamicCast<PacketSink>(serverApp.Get(0));
