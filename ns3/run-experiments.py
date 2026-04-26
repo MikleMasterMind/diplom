@@ -46,7 +46,7 @@ NETWORK_CONFIGS = [
     # },
     {
         ("50Mbps", "10ms"): [
-            ("50Mbps", "10ms", "true")
+            ("50Mbps", "100ms", "")
             # ("5Mbps", "10ms", "", ""),
             # ("5Mbps", "10ms", "", ""),
             # ("5Mbps", "10ms", "", ""),
@@ -86,18 +86,18 @@ def run_experiment(
     sim_time: int,
     sack_enabled: bool,
 ) -> bool:
-    print("========================================")
-    print("Running experiment with parameters:")
-    print(f"  Good Data Rate: {good_data_rate}")
-    print(f"  Good Delay: {good_delay}")
-    print(f"  Bad Data Rate: {bad_data_rate}")
-    print(f"  Bad Delay: {bad_delay}")
-    print(f"  Real Congestion enabled: {realCongestion}")
-    print(f"  Number of Paths: {num_paths}")
-    print(f"  Number of Bad Paths: {num_bad_paths}")
-    print(f"  Simulation Time: {sim_time} seconds")
-    print(f"  SACK Enabled: {format_bool(sack_enabled)}")
-    print("========================================")
+    # print("========================================")
+    # print("Running experiment with parameters:")
+    # print(f"  Good Data Rate: {good_data_rate}")
+    # print(f"  Good Delay: {good_delay}")
+    # print(f"  Bad Data Rate: {bad_data_rate}")
+    # print(f"  Bad Delay: {bad_delay}")
+    # print(f"  Real Congestion enabled: {realCongestion}")
+    # print(f"  Number of Paths: {num_paths}")
+    # print(f"  Number of Bad Paths: {num_bad_paths}")
+    # print(f"  Simulation Time: {sim_time} seconds")
+    # print(f"  SACK Enabled: {format_bool(sack_enabled)}")
+    # print("========================================")
 
     # Build command arguments
     args = [
@@ -179,10 +179,10 @@ def main() -> int:
         for _, num_bad_paths in PATH_CONFIGS
     )
 
-    print("Starting batch experiment execution...")
-    print(f"Network configurations: {len(NETWORK_CONFIGS)}")
-    print(f"Path configurations: {len(PATH_CONFIGS)}")
-    print(f"SACK configurations: {len(SACK_CONFIGS)}")
+    # print("Starting batch experiment execution...")
+    # print(f"Network configurations: {len(NETWORK_CONFIGS)}")
+    # print(f"Path configurations: {len(PATH_CONFIGS)}")
+    # print(f"SACK configurations: {len(SACK_CONFIGS)}")
     print(f"Total experiments: {total_experiments}")
     print()
 
