@@ -34,12 +34,14 @@
   </locale>
   <locale xml:lang="en">
     <terms>
-      <term name="online">electronic resource</term>
+      <term name="online">электронный ресурс</term>
       <!-- not exactly the correct term, but the most suitable one -->
       <term name="letter" form="short">pat.</term>
+      <term name="accessed">дата обращения</term>
       <!-- using completely irrelevant term to localize "pat." -->
       <term name="editor" form="verb-short">ed.</term>
       <term name="translator" form="verb-short">trans.</term>
+      <term name="page" form="short">c.</term>
     </terms>
   </locale>
   <locale xml:lang="ru">
@@ -146,8 +148,8 @@
   <macro name="page">
     <!-- It is assumed that fields "page" and "# of Pages" do not exist simultaneously. -->
     <group delimiter=" ">
-      <label variable="page" form="short" text-case="capitalize-first" plural="never"/>
       <text variable="page"/>
+      <label variable="page" form="short" plural="never"/>
     </group>
     <group delimiter=" ">
       <text variable="number-of-pages"/>
