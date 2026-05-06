@@ -66,7 +66,7 @@ def main():
                       whiskerprops=dict(color='blue'),
                       capprops=dict(color='blue'),
                       medianprops=dict(color='red', linewidth=15),
-                      flierprops=dict(marker='o', markerfacecolor='gray', markersize=4))
+                      showfliers=False)
         
         ax.set_title(f'Эксперимент {i+1}')
         ax.set_ylabel('Goodput (Mbps)')
